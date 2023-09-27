@@ -1,0 +1,87 @@
+<!--
+This HTML file creates a WebSocket connection to 127.0.0.1:9000 when you click on “Start Connection”.
+    It displays how long the connection remains open for and any data received from the server along with the time it was received.
+    If you check “Enable sending test data”, it will send test data to the server every 10 seconds.
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Connection</title>
+</head>
+<body>
+    <!-- Display elements for connection status, timer and messages -->
+    <h2>WebSocket Connection Test</h2>
+    <button id="startButton">Start Connection</button>
+    <label><input type="checkbox" id="sendDataCheckbox"> Enable sending test data</label>
+    <p id="status">Not connected</p>
+    <p id="timer">0</p>
+    <div id="messages"></div>
+
+    <script type="text/javascript">
+        // Declare variables for WebSocket, timer and time
+        var socket;
+        var timer;
+        var time = 0;
+
+        // Function to handle the start button click event
+        document.getElementById('startButton').onclick = function () {
+            // Close any existing WebSocket connection
+            if (socket) {
+                socket.close();
+            }
+
+            // Create a new WebSocket connection
+            socket = new WebSocket("ws://127.0.0.1:9000");
+
+            // Function to handle the WebSocket onopen event
+            socket.onopen = function (event) {
+                // Update the status display element
+                document.getElementById('status').innerHTML = 'Connected';
+
+                // Start a timer that updates every second
+                timer = setInterval(function () {
+                    time++;
+                    // Update the timer display element
+                    document.getElementById('timer').innerHTML = 'Connection open for ' + time + ' seconds';
+
+                    // Check if the sendDataCheckbox is checked and if time is a multiple of 10
+                    if (document.getElementById('sendDataCheckbox').checked && time % 10 === 0) {
+                        // Send test data to the server
+                        socket.send('Test data');
+                    }
+                }, 1000);
+            };
+
+            // Function to handle the WebSocket onmessage event
+            socket.onmessage = function (event) {
+                // Get the messages display element
+                var messagesDiv = document.getElementById('messages');
+
+                // Create a new paragraph element for the message
+                var messageParagraph = document.createElement('p');
+
+                // Set the text content of the paragraph to the received data and the current time
+                messageParagraph.textContent = 'Received at ' + new Date().toLocaleTimeString() + ': ' + event.data;
+
+                // Append the paragraph to the messages display element
+                messagesDiv.appendChild(messageParagraph);
+            };
+
+            // Function to handle the WebSocket onclose event
+            socket.onclose = function (event) {
+                // Update the status display element
+                document.getElementById('status').innerHTML = 'Disconnected';
+
+                // Clear the timer
+                clearInterval(timer);
+            };
+
+            // Function to handle the WebSocket onerror event
+            socket.onerror = function (error) {
+                console.log('WebSocket Error: ', error);
+            };
+        };
+    </script>
+</body>
+</html>
